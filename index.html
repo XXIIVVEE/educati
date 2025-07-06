@@ -1,0 +1,61 @@
+<?php
+require_once 'functions.php';
+require_once 'lessons.php';
+
+$currentLesson = isset($_GET['lesson']) ? (int)$_GET['lesson'] : 1;
+$totalLessons = count($lessons);
+$currentLesson = min(max($currentLesson, 1), $totalLessons);
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Веб-учебник | Урок <?= $currentLesson ?></title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Веб-учебник</h1>
+        <nav>
+            <ul>
+                <li><a href="?lesson=1">Главная</a></li>
+                <li class="dropdown">
+                    <span>Уроки ▾</span>
+                    <ul class="dropdown-content">
+                        <?php for ($i = 1; $i <= $totalLessons; $i++): ?>
+                            <li><a href="?lesson=<?= $i ?>">Урок <?= $i ?>: <?= $lessons[$i-1]['title'] ?></a></li>
+                        <?php endfor; ?>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <aside class="lesson-nav">
+            <h3>Прогресс</h3>
+            <div class="progress-bar">
+                <div class="progress" style="width: <?= ($currentLesson-1)/$totalLessons*100 ?>%"></div>
+            </div>
+            <ul>
+                <?php for ($i = 1; $i <= $totalLessons; $i++): ?>
+                    <li class="<?= $i == $currentLesson ? 'active' : '' ?>">
+                        <a href="?lesson=<?= $i ?>">Урок <?= $i ?></a>
+                    </li>
+                <?php endfor; ?>
+            </ul>
+        </aside>
+
+        <article class="lesson-content">
+            <?php displayLesson($currentLesson - 1); ?>
+        </article>
+    </main>
+
+    <footer>
+        <p>Веб-учебник &copy; <?= date('Y') ?></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
