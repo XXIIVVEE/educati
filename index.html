@@ -1,0 +1,105 @@
+<?php
+$lessons = [
+    [
+        'title' => 'Введение в HTML',
+        'content' => '<h3>Основы HTML</h3><p>HTML - структура веб-страниц.</p>',
+        'tasks' => [
+            [
+                'description' => 'Создайте заголовок h1 с текстом "Привет, мир!"',
+                'template' => '<h1></h1>',
+                'validator' => 'validate_html_task1'
+            ]
+        ]
+    ],
+    [
+        'title' => 'Основы CSS',
+        'content' => '<h3>Стилизация элементов</h3><p>CSS делает страницы красивыми.</p>',
+        'tasks' => [
+            [
+                'description' => 'Сделайте текст красным с помощью CSS',
+                'template' => '<style>p { }</style><p>Текст</p>',
+                'validator' => 'validate_css_task1'
+            ]
+        ]
+    ]
+];
+
+$current_lesson = isset($_GET['lesson']) ? (int)$_GET['lesson'] : 1;
+$current_lesson = max(1, min(count($lessons), $current_lesson));
+$lesson = $lessons[$current_lesson - 1];
+
+function validate_html_task1($code) {
+    if (preg_match('/<h1>\s*Привет,\s*мир!\s*<\/h1>/i', $code)) {
+        return ['success' => true, 'message' => 'Правильно!', 'output' => $code];
+    }
+    return ['success' => false, 'message' => 'Добавьте текст "Привет, мир!" в h1'];
+}
+
+function validate_css_task1($code) {
+    if (preg_match('/color\s*:\s*red/i', $code)) {
+        return ['success' => true, 'message' => 'Отлично!', 'output' => $code];
+    }
+    return ['success' => false, 'message' => 'Используйте свойство color: red'];
+}
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Веб-учебник</title>
+    <style>
+        body { font-family: Arial; background: #1a1a1a; color: #fff; padding: 20px; }
+        .lesson { background: #2a2a2a; padding: 20px; margin-bottom: 20px; }
+        .task { background: #333; padding: 15px; margin: 15px 0; }
+        textarea { width: 100%; height: 100px; background: #444; color: #fff; }
+        button { background: #6a5acd; color: white; border: none; padding: 8px 15px; }
+        .result { margin-top: 10px; padding: 10px; }
+        .success { background: #2d4d2d; }
+        .error { background: #4d2d2d; }
+        .output { border: 1px solid #555; padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Веб-учебник</h1>
+    
+    <div class="lesson">
+        <h2><?= $lesson['title'] ?></h2>
+        <div><?= $lesson['content'] ?></div>
+        
+        <?php foreach ($lesson['tasks'] as $i => $task): ?>
+        <div class="task">
+            <h3>Задание <?= $i+1 ?></h3>
+            <p><?= $task['description'] ?></p>
+            <textarea id="code_<?= $current_lesson ?>_<?= $i ?>"><?= htmlspecialchars($task['template']) ?></textarea>
+            <button onclick="checkCode(<?= $current_lesson ?>, <?= $i ?>)">Проверить</button>
+            <div id="result_<?= $current_lesson ?>_<?= $i ?>" class="result"></div>
+            <div id="output_<?= $current_lesson ?>_<?= $i ?>" class="output"></div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    
+    <script>
+    function checkCode(lessonId, taskId) {
+        const code = document.getElementById(`code_${lessonId}_${taskId}`).value;
+        const resultDiv = document.getElementById(`result_${lessonId}_${taskId}`);
+        const outputDiv = document.getElementById(`output_${lessonId}_${taskId}`);
+        
+        resultDiv.innerHTML = 'Проверка...';
+        resultDiv.className = 'result';
+        outputDiv.innerHTML = '';
+        
+        fetch('validate.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `lesson=${lessonId}&task=${taskId}&code=${encodeURIComponent(code)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            resultDiv.innerHTML = data.message;
+            resultDiv.className = data.success ? 'result success' : 'result error';
+            if (data.output) outputDiv.innerHTML = data.output;
+        });
+    }
+    </script>
+</body>
+</html>
